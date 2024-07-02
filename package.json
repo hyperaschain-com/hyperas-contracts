@@ -1,0 +1,31 @@
+{
+  "name": "hyra-contracts",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "compile": "hardhat compile",
+    "test_lock": "hardhat test test/Lock.ts",
+    "test_hyra_deploy": "hardhat test test/testHYRAV2.ts",
+    "test_reward_pool": "hardhat test test/testRewardPool.ts",
+    "deploy_hyra": "hardhat run deploy/deployHyra.ts --network arbSepoliaTest",
+    "deploy_hyra_v2": "hardhat run deploy/deployHyraV2.ts --network arbSepoliaTest"
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@nomicfoundation/hardhat-toolbox": "^5.0.0",
+    "@openzeppelin/hardhat-upgrades": "^3.2.0",
+    "hardhat": "^2.22.5",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.5.2"
+  },
+  "dependencies": {
+    "@arbitrum/orbit-sdk": "^0.17.0",
+    "@arbitrum/sdk": "^3.6.0",
+    "@openzeppelin/contracts": "^5.0.2",
+    "@openzeppelin/contracts-upgradeable": "^5.0.2",
+    "dotenv": "^16.4.5"
+  }
+}
