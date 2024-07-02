@@ -9,7 +9,7 @@ This repository contains the smart contracts for the Hyperas Chain project, incl
 ### Key Functions
 
 #### a. Initialization (initialize)
-- Sets up HYRA with the name "Hyperas Chain" and the symbol "HYRA".
+- Sets up HYRA with the name "HYRA" and the symbol "HYRA".
 - Grants admin rights to the contract deployer.
 - Adds the initializer address to the pool list and mints the initial token supply to this address.
 
