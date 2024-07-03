@@ -41,7 +41,6 @@ contract HYRAV2 is ERC20Upgradeable, ERC20BurnableUpgradeable, AccessControlUpgr
     event PoolDisabled(string poolName, address poolAddr);
     event Minted(address indexed poolAddr, uint256 amount);
 
-    // constructor of HYRA
     function initialize(address _initiatorAddr) public initializer {
         __ERC20_init("HYRA", "HYRA");
         __ERC20Burnable_init();
