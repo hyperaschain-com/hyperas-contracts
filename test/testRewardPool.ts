@@ -20,7 +20,7 @@ describe("Reward Pool Development Testing", function () {
 
         ///////////////////// Upgrade Hyra contract /////////////////////
         // const rewardPoolUpgradeTestFactory = await ethers.getContractFactory("RewardPoolUpgradeTest");
-        // const rewardPoolUpgradeProxyContract = await upgrades.upgradeProxy(rewardPoolV2ProxyContract.target, rewardPoolUpgradeTestFactory); // old proxy address - new proxy factory
+        // const rewardPoolUpgradeProxyContract = await upgradeable.upgradeProxy(rewardPoolV2ProxyContract.target, rewardPoolUpgradeTestFactory); // old proxy address - new proxy factory
         // await rewardPoolUpgradeProxyContract.deployTransaction.wait();
         ///////////////////// END Upgrade contract /////////////////////
 

@@ -8,10 +8,10 @@ import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 
 /**
- * @title RewardPoolV2
+ * @title RewardPoolUpgradeTest
  * @dev This contract is used to distribute rewards
  */
-contract RewardPoolV2 is Initializable, AccessControlUpgradeable, PausableUpgradeable, ReentrancyGuardUpgradeable {
+contract RewardPoolUpgradeTest is Initializable, AccessControlUpgradeable, PausableUpgradeable, ReentrancyGuardUpgradeable {
     using EnumerableSet for EnumerableSet.AddressSet;
 
     bytes32 public constant DISTRIBUTOR_ROLE = keccak256("DISTRIBUTOR_ROLE");
@@ -23,9 +23,9 @@ contract RewardPoolV2 is Initializable, AccessControlUpgradeable, PausableUpgrad
     uint256 public totalRewards; // total rewards
 
     // rule for each address to receive rewards
-    uint256 public minDistributionAmount;
-    uint256 public maxDistributionAmount;
-    uint256 public minDistributionInterval;
+    uint256 private minDistributionAmount;
+    uint256 private maxDistributionAmount;
+    uint256 private minDistributionInterval;
     mapping(address => uint256) public lastReceivedTime; // last received time of each receiver
 
     // error list
@@ -42,7 +42,7 @@ contract RewardPoolV2 is Initializable, AccessControlUpgradeable, PausableUpgrad
     event DistributionAmountRangeChanged(uint256 _minDistributionAmount, uint256 _maxDistributionAmount);
     event DistributionIntervalChanged(uint256 _minDistributionInterval);
 
-    /// @custom:oz-upgrades-unsafe-allow constructor
+    /// @custom:oz-upgradeable-unsafe-allow constructor
     constructor() {
         _disableInitializers();
     }
@@ -74,9 +74,8 @@ contract RewardPoolV2 is Initializable, AccessControlUpgradeable, PausableUpgrad
         emit DistributeReward(_receiver, _reward);
     }
 
-
     /**
-     * @dev private function to transfer reward to a specific address
+     * @dev Transfer reward to a specific address
      * @param _to The address to transfer reward
      * @param _amount The amount of reward to transfer
      */
@@ -124,6 +123,13 @@ contract RewardPoolV2 is Initializable, AccessControlUpgradeable, PausableUpgrad
     }
 
     /**
+    * @dev Add more function for new implementation contract
+     */
+    function testUpgrade() public pure returns (string memory) {
+        return "Upgradeable contract is working";
+    }
+
+    /**
      * @dev Pause the contract
      */
     function pause() external onlyRole(DEFAULT_ADMIN_ROLE) {
@@ -140,10 +146,5 @@ contract RewardPoolV2 is Initializable, AccessControlUpgradeable, PausableUpgrad
      * @dev Receive HYRA
      */
     receive() external payable {}
-
-
-
-
-
 
 }
