@@ -41,12 +41,17 @@ contract HYRAV2 is ERC20Upgradeable, ERC20BurnableUpgradeable, AccessControlUpgr
     event PoolDisabled(string poolName, address poolAddr);
     event Minted(address indexed poolAddr, uint256 amount);
 
+    /// @custom:oz-upgrades-unsafe-allow constructor
+    constructor() {
+        _disableInitializers();
+    }
+
     function initialize(address _initiatorAddr) public initializer {
         __ERC20_init("HYRA", "HYRA");
         __ERC20Burnable_init();
         __AccessControl_init();
 
-        // grant sender the minter role
+        // grant roles
         _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
         _setRoleAdmin(MINTER_ROLE, DEFAULT_ADMIN_ROLE);
 
