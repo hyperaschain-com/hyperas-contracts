@@ -11,10 +11,10 @@ import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "hardhat/console.sol";
 
 /**
- * @title RewardPoolV3
+ * @title RewardPoolDistribution.sol
  * @dev This contract is used to distribute HYRA rewards
  */
-contract RewardPoolV3 is UUPSUpgradeableCustom, ReentrancyGuardUpgradeable, PausableUpgradeable, AccessControlUpgradeable {
+contract RewardPoolDistribution is UUPSUpgradeableCustom, ReentrancyGuardUpgradeable, PausableUpgradeable, AccessControlUpgradeable {
     using EnumerableSet for EnumerableSet.AddressSet;
     // Roles
     bytes32 public constant OWNER_ROLE = keccak256("OWNER_ROLE"); // owner role

@@ -10,7 +10,7 @@ import "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol"
  * @title HYRA as native coin in layer 3 chain
  * @dev This contract is used to mint HYRA to pools
  */
-contract HYRAV2 is ERC20Upgradeable, ERC20BurnableUpgradeable, AccessControlUpgradeable{
+contract HYRA is ERC20Upgradeable, ERC20BurnableUpgradeable, AccessControlUpgradeable{
     // Define the maximum supply and initial supply
     uint256 public constant MAX_SUPPLY = 48_500_000_000 * 10 ** 18;
     uint256 public constant INITIAL_SUPPLY = 1_000_000_000 * 10 ** 18;
