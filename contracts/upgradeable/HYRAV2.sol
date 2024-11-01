@@ -35,6 +35,7 @@ contract HYRAV2 is ERC20Upgradeable, ERC20BurnableUpgradeable, AccessControlUpgr
     error ExceedsMaxSupply();
     error PoolAlreadyExists();
     error PoolDoesNotExist();
+    error ZeroAddress();
 
     // event list
     event PoolAdded(string poolName, address poolAddr);
@@ -69,6 +70,9 @@ contract HYRAV2 is ERC20Upgradeable, ERC20BurnableUpgradeable, AccessControlUpgr
      * @param _amount The amount of HYRA to mint
     */
     function mint(address _poolAddr, uint256 _amount) public onlyRole(MINTER_ROLE) poolExist(_poolAddr) {
+        if (_poolAddr == address(0)) {
+            revert ZeroAddress();
+        }
         if (_amount + totalSupply() > MAX_SUPPLY) {
             revert ExceedsMaxSupply();
         }
