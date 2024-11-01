@@ -8,14 +8,14 @@ import "@openzeppelin/contracts-upgradeable/utils/PausableUpgradeable.sol";
 import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 import "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import "hardhat/console.sol";
-
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 /**
- * @title RewardPoolDistribution.sol
+ * @title RewardPoolDistribution
  * @dev This contract is used to distribute HYRA rewards
  */
 contract RewardPoolDistribution is UUPSUpgradeableCustom, ReentrancyGuardUpgradeable, PausableUpgradeable, AccessControlUpgradeable {
     using EnumerableSet for EnumerableSet.AddressSet;
+    using SafeERC20 for IERC20;
     // Roles
     bytes32 public constant OWNER_ROLE = keccak256("OWNER_ROLE"); // owner role
     bytes32 public constant MANAGER_ROLE = keccak256("MANAGER_ROLE");
@@ -125,8 +125,8 @@ contract RewardPoolDistribution is UUPSUpgradeableCustom, ReentrancyGuardUpgrade
         bytes32 ethSignedMessageHash = keccak256(
             abi.encodePacked("\x19Ethereum Signed Message:\n32", message)
         );
-        address recoverSigner = recoverSigner(ethSignedMessageHash, signature);
-        if (recoverSigner != signer) revert InvalidSigner();
+        address recoveredSigner = recoverSigner(ethSignedMessageHash, signature);
+        if (recoveredSigner != signer) revert InvalidSigner();
         // done check nonce is used
         isNonceUsed[nonce] = true;
         // transfer HYRA rewards as native token
@@ -281,7 +281,7 @@ contract RewardPoolDistribution is UUPSUpgradeableCustom, ReentrancyGuardUpgrade
         uint256 tokenBalance = IERC20(token).balanceOf(address(this));
         if (amount > tokenBalance)
             revert InsufficientBalance(tokenBalance, amount);
-        IERC20Extended(token).safeTransfer(sender, amount);
+        IERC20(token).safeTransfer(sender, amount);
         isApproved[sender] = false;
         emit WithdrawERC20(token, sender, amount);
     }
