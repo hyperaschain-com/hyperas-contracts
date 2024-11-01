@@ -87,6 +87,9 @@ contract HYRAV2 is ERC20Upgradeable, ERC20BurnableUpgradeable, AccessControlUpgr
      * @param _poolAddr The address of the pool
     */
     function addPool(string memory _name, address _poolAddr) public onlyRole(DEFAULT_ADMIN_ROLE) poolNotExist(_poolAddr) {
+        if (_poolAddr == address(0)) {
+            revert ZeroAddress();
+        }
         poolInfo[_poolAddr].isValid = true;
         numOfPools++;
         poolInfo[_poolAddr] = Pool(numOfPools, _name, _poolAddr, 0, true);
@@ -100,6 +103,9 @@ contract HYRAV2 is ERC20Upgradeable, ERC20BurnableUpgradeable, AccessControlUpgr
     */
     function disablePool(address _poolAddr) public onlyRole(DEFAULT_ADMIN_ROLE) poolExist(_poolAddr) {
         poolInfo[_poolAddr].isValid = false;
+        unchecked {
+            numOfPools--;
+        }
         string memory _name = poolInfo[_poolAddr].poolName;
         emit PoolDisabled(_name, _poolAddr);
     }
