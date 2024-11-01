@@ -80,9 +80,9 @@ contract RewardPoolDistribution is UUPSUpgradeableCustom, ReentrancyGuardUpgrade
         __ReentrancyGuard_init();
         __Pausable_init();
         // set limit
-        minPaymentAmount = 1000e18; // init min 1,000 HYRA for each transaction
-        maxPaymentAmount = 100000e18; // init max 100,000 HYRA for each transaction
-        maxDailyPaymentAmount = 100000e18; // init max daily 100,000 HYRA
+        minPaymentAmount = 10e18; // init min 10 HYRA for each transaction
+        maxPaymentAmount = 1000e18; // init max 1000 HYRA for each transaction
+        maxDailyPaymentAmount = 1000e18; // init max daily 1000 HYRA
         // set roles
         _grantRole(OWNER_ROLE, msg.sender);
         _grantRole(MANAGER_ROLE, _managerAddress);

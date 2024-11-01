@@ -7,9 +7,8 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "compile": "hardhat compile",
     "test_lock": "hardhat test test/Lock.ts",
-    "test_hyra_deploy": "hardhat test test/testHYRAV2.ts",
     "test_hyra_contract": "hardhat test test/testHyraContract.ts",
-    "test_reward_pool": "hardhat test test/testRewardPool.ts",
+    "test_reward_pool_contract": "hardhat test test/testRewardPoolContract.ts",
     "deploy_hyra": "hardhat run deploy/deployHyra.ts --network arbSepoliaTest",
     "deploy_hyra_v2": "hardhat run deploy/deployHyraV2.ts --network arbSepoliaTest"
   },
