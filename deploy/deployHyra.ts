@@ -1,3 +1,5 @@
+import {upgrades} from "hardhat";
+
 const { ethers } = require("hardhat");
 const fs = require('fs');
 // @ts-ignore
@@ -10,26 +12,20 @@ async function main() {
 
     const configData = await readFile("config.json");
     const initiatorAddr = configData['initiatorAddr'];
-    console.log("initiatorAddr:", initiatorAddr);
+    const managerAddr = configData['managerAddr'];
+    const minterAddr = configData['minterAddr'];
+    const verifierAddr = configData['verifierAddr'];
 
     ///////////////// Deploy Hyra contract /////////////////////
-    const hyraTokenFactory = await ethers.getContractFactory("HYRA");
-    const hyraContract = await hyraTokenFactory.deploy(initiatorAddr);
-    await hyraContract.waitForDeployment();
-    console.log("1. Hyra Token address to:", hyraContract.target);
+    const hyraFactory = await ethers.getContractFactory("HYRA");
+    const hyraProxyContract = await upgrades.deployProxy(hyraFactory, [initiatorAddr, managerAddr,minterAddr, verifierAddr ], {kind: "transparent" });
+    await hyraProxyContract.deploymentTransaction();
+    console.log("1. Hyra Token address to:", hyraProxyContract.target);
     /////////////////// END Deploy contract /////////////////////
 
 
-    ///////////////////// Deploy AI POOL contract /////////////////////
-    const aiPoolFactory = await ethers.getContractFactory("AIPool");
-    const aiPool = await aiPoolFactory.deploy(hyraContract.target);
-    await aiPool.waitForDeployment();
-    console.log("2. AI Pool address to:", aiPool.target);
-    ///////////////////// END Deploy AI POOL contract /////////////////////
-
     // save contract address to file
-    saveContractAddressesToFile("Hyra address ", hyraContract.target, "contract_addresses.json");
-    saveContractAddressesToFile("AI Pool address ", aiPool.target, "contract_addresses.json");
+    saveContractAddressesToFile("hyra_contract_address", hyraProxyContract.target, "contract_addresses.json");
     console.log("contract_addresses file created");
 
     // sleep 10s
@@ -38,13 +34,8 @@ async function main() {
     ///////////////////// Verify contracts ///////////////////////////
     // 1. Verify hyra contract
     await hre.run("verify:verify", {
-        address: hyraContract.target,
-        constructorArguments: [initiatorAddr],
-    });
-    // 3. Verify ai pool contract
-    await hre.run("verify:verify", {
-        address: aiPool.target,
-        constructorArguments: [hyraContract.target],
+        address: hyraProxyContract.target,
+        constructorArguments: [initiatorAddr, managerAddr,minterAddr, verifierAddr ],
     });
     console.log("all contracts verified");
     ///////////////////// END Verify contracts ///////////////////////////
