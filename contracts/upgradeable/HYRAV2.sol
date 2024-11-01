@@ -111,10 +111,33 @@ contract HYRAV2 is ERC20Upgradeable, ERC20BurnableUpgradeable, AccessControlUpgr
     }
 
     /**
+     * @dev Get the list of active pools information
+     * @return The list of active pools
+     */
+    function getActivePools() public view returns (Pool[] memory) {
+        uint256 activeCount;
+        for (uint256 i = 0; i < poolAddrList.length; i++) {
+            if (poolInfo[poolAddrList[i]].isValid) {
+                activeCount++;
+            }
+        }
+        Pool[] memory _pools = new Pool[](activeCount);
+        uint256 index;
+        for (uint256 i = 0; i < poolAddrList.length; i++) {
+            if (poolInfo[poolAddrList[i]].isValid) {
+                _pools[index] = poolInfo[poolAddrList[i]];
+                index++;
+            }
+        }
+        return _pools;
+    }
+
+
+    /**
      * @dev Get the list of pools information
      * @return The list of pools
     */
-    function getPools() public view returns (Pool[] memory) {
+    function getAllPools() public view returns (Pool[] memory) {
         Pool[] memory _pools = new Pool[](numOfPools);
         for (uint256 i = 0; i < numOfPools; i++) {
             _pools[i] = poolInfo[poolAddrList[i]];
