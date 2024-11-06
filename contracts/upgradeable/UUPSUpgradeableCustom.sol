@@ -10,21 +10,19 @@ abstract contract UUPSUpgradeableCustom is UUPSUpgradeable, OwnableUpgradeable {
     struct UpgradeRequest {
         address newImplementation;
         uint256 activationTime;
-        bool executed;
-        bool canceled;
         uint256 approvalCount;
     }
+
     uint256 private _version; // Current version of the contract
 
     UpgradeRequest public pendingUpgrade; // Pending upgrade request
-    mapping(address => bool) public upgradeApprovals;// Mapping approvals from authorized
+    mapping(address => bool) public upgradeApprovals; // Mapping approvals from authorized signers
 
-    // Addresses of the authorized signers
-    address public chiefTechnologyOfficer;
-    address public financeDepartment;
-    address public chairman;
+    mapping(address => bool) public isAuthorizedSigner; // Mapping of authorized signers
+    address[] public authorizedSigners; // List of authorized signers
 
     uint256 public constant UPGRADE_DELAY = 3 days; // 3 days delay for upgrade
+    uint256 public constant MIN_APPROVALS = 2; // Minimum approvals required for upgrade
     bool private _upgrading; // Flag to control upgrade process
 
     // Event list
@@ -33,20 +31,16 @@ abstract contract UUPSUpgradeableCustom is UUPSUpgradeable, OwnableUpgradeable {
     event Upgraded(address indexed newImplementation);
     event UpgradeApproved(address indexed approver, address indexed newImplementation);
 
-    // error list
+    // Error list
     error InvalidImplementation();
     error UpgradeAlreadyPending();
     error NotAuthorized();
     error UpgradeNotScheduled();
-    error UpgradeCanceled();
+    error ActivationTimePassed();
     error AlreadyApproved();
-    error UpgradeNotAuthorized();
-    error UpgradeNotExecuted();
-    error CannotCancelAfterActivationTime();
     error ActivationTimeNotReached();
-    error UpgradeAlreadyExecuted();
+    error UpgradeNotAuthorized();
     error MinimumApprovalsNotReached();
-
 
     // Initializer function
     function __UUPSUpgradeableCustom_init(
@@ -57,9 +51,15 @@ abstract contract UUPSUpgradeableCustom is UUPSUpgradeable, OwnableUpgradeable {
         __Ownable_init(_msgSender());
         __UUPSUpgradeable_init();
         _version = 1;
-        chiefTechnologyOfficer = _chiefTechnologyOfficer;
-        financeDepartment = _financeDepartment;
-        chairman = _chairman;
+
+        // Initialize authorized signers
+        isAuthorizedSigner[_chiefTechnologyOfficer] = true;
+        isAuthorizedSigner[_financeDepartment] = true;
+        isAuthorizedSigner[_chairman] = true;
+        // Add authorized signers to the list
+        authorizedSigners.push(_chiefTechnologyOfficer);
+        authorizedSigners.push(_financeDepartment);
+        authorizedSigners.push(_chairman);
     }
 
     /**
@@ -67,42 +67,29 @@ abstract contract UUPSUpgradeableCustom is UUPSUpgradeable, OwnableUpgradeable {
      * @param newImplementation Address of the new implementation
      */
     function proposeUpgrade(address newImplementation) public onlyOwner {
-        // Can not propose an upgrade to the zero address
         if (newImplementation == address(0)) {
             revert InvalidImplementation();
         }
-        // Can not propose an upgrade if there is already a pending upgrade
         if (pendingUpgrade.newImplementation != address(0)) {
             revert UpgradeAlreadyPending();
         }
-        // Schedule the upgrade
+
         pendingUpgrade = UpgradeRequest({
             newImplementation: newImplementation,
             activationTime: block.timestamp + UPGRADE_DELAY,
-            executed: false,
-            canceled: false,
             approvalCount: 0
         });
-        // Reset all the approvals
-        upgradeApprovals[chiefTechnologyOfficer] = false;
-        upgradeApprovals[financeDepartment] = false;
-        upgradeApprovals[chairman] = false;
 
+        _resetApprovals();
         emit UpgradeScheduled(newImplementation, pendingUpgrade.activationTime);
     }
 
     /**
      * @dev Approve the upgrade request
      */
-    function approveUpgrade() public {
-        if (msg.sender != chiefTechnologyOfficer && msg.sender != financeDepartment && msg.sender != chairman) {
-            revert NotAuthorized();
-        }
+    function approveUpgrade() public onlyAuthorizedSigner {
         if (pendingUpgrade.newImplementation == address(0)) {
             revert UpgradeNotScheduled();
-        }
-        if (pendingUpgrade.canceled) {
-            revert UpgradeCanceled();
         }
         if (upgradeApprovals[msg.sender]) {
             revert AlreadyApproved();
@@ -115,70 +102,62 @@ abstract contract UUPSUpgradeableCustom is UUPSUpgradeable, OwnableUpgradeable {
     /**
      * @dev Cancel the upgrade request
      */
-    function cancelUpgrade() public {
-        // Only authorized signers can cancel the upgrade
-        if (msg.sender != chiefTechnologyOfficer && msg.sender != financeDepartment && msg.sender != chairman && msg.sender != owner()) {
-            revert NotAuthorized();
-        }
+    function cancelUpgrade() public onlyOwner {
         if (pendingUpgrade.newImplementation == address(0)) {
             revert UpgradeNotScheduled();
         }
-        if (pendingUpgrade.canceled) {
-            revert UpgradeCanceled();
-        }
         if (block.timestamp >= pendingUpgrade.activationTime) {
-            revert CannotCancelAfterActivationTime();
+            revert ActivationTimePassed();
         }
-        // Mark the upgrade as canceled
-        pendingUpgrade.canceled = true;
 
-        // Reset the pending upgrade and approvals
-        delete pendingUpgrade;
-        upgradeApprovals[chiefTechnologyOfficer] = false;
-        upgradeApprovals[financeDepartment] = false;
-        upgradeApprovals[chairman] = false;
-        emit UpgradeCanceled(pendingUpgrade.newImplementation);
+        address canceledImplementation = pendingUpgrade.newImplementation;
+        _resetPendingUpgrade();
+        emit UpgradeCanceled(canceledImplementation);
     }
 
     /**
      * @dev Execute the upgrade request
      */
-    function executeUpgrade() public {
+    function executeUpgrade() external {
         if (pendingUpgrade.newImplementation == address(0)) {
             revert UpgradeNotScheduled();
-        }
-        if (pendingUpgrade.canceled) {
-            revert UpgradeCanceled();
         }
         if (block.timestamp < pendingUpgrade.activationTime) {
             revert ActivationTimeNotReached();
         }
-        if (pendingUpgrade.executed) {
-            revert UpgradeAlreadyExecuted();
+        if (pendingUpgrade.approvalCount < MIN_APPROVALS) {
+            revert MinimumApprovalsNotReached();
         }
-        // Check if the minimum approvals are reached (min 2)
-        if (pendingUpgrade.approvalCount < 2) {
-            revert  MinimumApprovalsNotReached();
-        }
-        pendingUpgrade.executed = true;  // Mark the upgrade as executed
-        _upgrading = true; // Set the upgrading flag to true
+
+        address newImplementation = pendingUpgrade.newImplementation;
+        _upgrading = true;
+
         // Upgrade the contract
-        _upgradeToAndCallUUPS(pendingUpgrade.newImplementation, new bytes(0), false);
-        _upgrading = false; // Reset the upgrading flag
-        // Increment the version
+        upgradeToAndCall(newImplementation, new bytes(0));
+        _upgrading = false;
         _version += 1;
 
-        // Reset the pending upgrade and approvals
-        delete pendingUpgrade;
-        upgradeApprovals[chiefTechnologyOfficer] = false;
-        upgradeApprovals[financeDepartment] = false;
-        upgradeApprovals[chairman] = false;
+        _resetPendingUpgrade();
+        emit Upgraded(newImplementation);
+    }
 
-        emit Upgraded(pendingUpgrade.newImplementation);
+    // Internal function to reset approvals
+    function _resetApprovals() internal {
+        uint256 length = authorizedSigners.length;
+        for (uint256 i = 0; i < length; ) {
+            upgradeApprovals[authorizedSigners[i]] = false;
+            unchecked { i++; }
+        }
+    }
+
+    // Internal function to reset pending upgrade
+    function _resetPendingUpgrade() internal {
+        _resetApprovals();
+        delete pendingUpgrade;
     }
 
     // Authorize upgrade (called during the upgrade process)
-    function _authorizeUpgrade(address newImplementation) internal override {
+    function _authorizeUpgrade(address) internal view override {
         if (!_upgrading) {
             revert UpgradeNotAuthorized();
         }
@@ -187,5 +166,13 @@ abstract contract UUPSUpgradeableCustom is UUPSUpgradeable, OwnableUpgradeable {
     // Get the current version
     function getVersion() public view returns (uint256) {
         return _version;
+    }
+
+    // Modifier to check if authorized signer
+    modifier onlyAuthorizedSigner() {
+        if (!isAuthorizedSigner[msg.sender]) {
+            revert NotAuthorized();
+        }
+        _;
     }
 }

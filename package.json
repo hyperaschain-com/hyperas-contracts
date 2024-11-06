@@ -9,6 +9,7 @@
     "test_lock": "hardhat test test/Lock.ts",
     "test_hyra_contract": "hardhat test test/testHyraContract.ts",
     "test_reward_pool_contract": "hardhat test test/testRewardPoolContract.ts",
+    "test_upgrade_logic_contract": "hardhat test test/testUpgradeLogicContract.ts",
     "deploy_hyra": "hardhat run deploy/deployHyra.ts --network arbSepoliaTest"
   },
   "author": "",

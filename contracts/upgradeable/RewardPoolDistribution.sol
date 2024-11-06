@@ -13,7 +13,7 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
  * @title RewardPoolDistribution
  * @dev This contract is used to distribute HYRA rewards
  */
-contract RewardPoolDistribution is UUPSUpgradeableCustom, ReentrancyGuardUpgradeable, PausableUpgradeable, AccessControlUpgradeable {
+contract RewardPoolDistribution is UUPSUpgradeableCustom, AccessControlUpgradeable, ReentrancyGuardUpgradeable, PausableUpgradeable  {
     using EnumerableSet for EnumerableSet.AddressSet;
     using SafeERC20 for IERC20;
     // Roles
@@ -73,10 +73,14 @@ contract RewardPoolDistribution is UUPSUpgradeableCustom, ReentrancyGuardUpgrade
         address _managerAddress,
         address _signerAddress,
         address _verifierAddress,
-        address _deliverAddress
+        address _deliverAddress,
+        address _chiefTechnologyOfficer,
+        address _financeDepartment,
+        address _chairman
     ) public initializer {
         // Initialize contract
-        __UUPSUpgradeableCustom_init();
+        __UUPSUpgradeableCustom_init(_chiefTechnologyOfficer, _financeDepartment, _chairman);
+        __AccessControl_init();
         __ReentrancyGuard_init();
         __Pausable_init();
         // set limit
