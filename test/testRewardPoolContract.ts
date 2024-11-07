@@ -5,12 +5,35 @@ import { describe, it } from "mocha";
 
 describe("Reward Pool Contract", function () {
     async function deployContracts() {
-        const [deployer, manager, signer, verifier, deliver, normalUser] = await ethers.getSigners();
-        console.log("Deploying contracts with the account:", deployer.address);
+        const [
+            deployer,
+            manager,
+            signer,
+            verifier,
+            deliver,
+            cto,
+            financeDept,
+            chairman,
+            authorizedSigner1,
+            authorizedSigner2,
+            normalUser,
+        ] = await ethers.getSigners();
 
-        // Deploy affiliate reward pool
-        const rewardPoolDistribution = await ethers.getContractFactory("RewardPoolDistribution");
-        const rewardPoolDistributionContract = await upgrades.deployProxy(rewardPoolDistribution, [manager.address, signer.address, verifier.address, deliver.address], { kind: "uups" });
+        // Deploy the RewardPoolDistribution contract
+        const RewardPoolDistribution = await ethers.getContractFactory("RewardPoolDistribution");
+        const rewardPoolDistributionContract = await upgrades.deployProxy(
+            RewardPoolDistribution,
+            [
+                manager.address,
+                signer.address,
+                verifier.address,
+                deliver.address,
+                cto.address,
+                financeDept.address,
+                chairman.address,
+            ],
+            { kind: "uups" }
+        );
         await rewardPoolDistributionContract.waitForDeployment();
         console.log("Reward Pool deployed at:", rewardPoolDistributionContract.target);
 
