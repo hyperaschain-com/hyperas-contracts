@@ -4,12 +4,13 @@ pragma solidity ^0.8.24;
 import "@openzeppelin/contracts-upgradeable/token/ERC20/ERC20Upgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC20/extensions/ERC20BurnableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol";
+import "./UUPSUpgradeableCustom.sol";
 
 /**
  * @title HYRA as native coin in layer 3 chain
  * @dev This contract is used to mint HYRA to pools
  */
-contract HYRA is ERC20Upgradeable, ERC20BurnableUpgradeable, AccessControlUpgradeable{
+contract HYRA is ERC20Upgradeable, ERC20BurnableUpgradeable, AccessControlUpgradeable, UUPSUpgradeableCustom {
     // Define the maximum supply and initial supply
     uint256 public constant MAX_SUPPLY = 48_500_000_000 * 10 ** 18;
     uint256 public constant INITIAL_SUPPLY = 1_000_000_000 * 10 ** 18;
@@ -53,10 +54,19 @@ contract HYRA is ERC20Upgradeable, ERC20BurnableUpgradeable, AccessControlUpgrad
         _disableInitializers();
     }
 
-    function initialize(address _initiatorAddr, address _manager, address _minter, address _verifier) public initializer {
+    function initialize(
+        address _initiatorAddr,
+        address _manager,
+        address _minter,
+        address _verifier,
+        address _chiefTechnologyOfficer,
+        address _financeDepartment,
+        address _chairman
+    ) public initializer {
         __ERC20_init("HYRA", "HYRA");
         __ERC20Burnable_init();
         __AccessControl_init();
+        __UUPSUpgradeableCustom_init(_chiefTechnologyOfficer, _financeDepartment, _chairman);
 
         // grant roles
         _grantRole(DEFAULT_ADMIN_ROLE, _manager);

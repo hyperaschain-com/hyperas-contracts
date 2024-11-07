@@ -10,16 +10,39 @@ import {min} from "hardhat/internal/util/bigint";
 describe("Hyra Contract Development Testing", function () {
 
     async function deployContracts() {
-        const [owner, manager, minter, verifier, secondPool ] = await ethers.getSigners();
-        console.log("Owner: Deploying contracts with the account:", owner.address);
+        const [
+            owner,
+            manager,
+            minter,
+            verifier,
+            secondPool,
+            cto,
+            financeDept,
+            chairman,
+            authorizedSigner1,
+            authorizedSigner2,
+            normalUser,
+        ] = await ethers.getSigners();
 
-        ///////////////// Deploy Hyra contract /////////////////////
+        // Deploy the RewardPoolDistribution contract
         const hyraFactory = await ethers.getContractFactory("HYRA");
-        const hyraProxyContract = await upgrades.deployProxy(hyraFactory, [owner.address, manager.address, minter.address, verifier.address], {kind: "transparent" });
+        const hyraProxyContract = await upgrades.deployProxy(
+            hyraFactory,
+            [
+                owner.address,
+                manager.address,
+                minter.address,
+                verifier.address,
+                cto.address,
+                financeDept.address,
+                chairman.address
+            ],
+            { kind: "uups" }
+        );
         await hyraProxyContract.waitForDeployment();
         /////////////////// END Deploy contract /////////////////////
 
-        return { hyraContract: hyraProxyContract, owner, manager, minter, verifier, secondPool };
+        return { hyraContract: hyraProxyContract, owner, manager, minter, verifier, secondPool, cto, financeDept, chairman, authorizedSigner1, authorizedSigner2, normalUser };
     }
 
     describe("Deployment HYRA contract", function () {
