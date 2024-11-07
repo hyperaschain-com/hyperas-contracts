@@ -67,8 +67,8 @@ describe("Reward Pool Contract Upgrade Logic", function () {
             const RewardPoolDistributionV2 = await ethers.getContractFactory("RewardPoolDistribution");
             const newImplementation = await RewardPoolDistributionV2.deploy();
             await newImplementation.waitForDeployment();
-            console.log("address of new implementation: ", newImplementation.target);
-            console.log("current of address", rewardPoolDistribution.target);
+            // console.log("address of new implementation: ", newImplementation.target);
+            // console.log("proxy address", rewardPoolDistribution.target);
             // propose an upgrade
             await rewardPoolDistribution.connect(deployer).proposeUpgrade(newImplementation.target);
             // get the pending upgrade details
@@ -133,23 +133,27 @@ describe("Reward Pool Contract Upgrade Logic", function () {
             );
         });
 
-        it("Should execute the upgrade after activation time and required approvals", async function () {
+        it("A1. Should execute the upgrade after activation time and required approvals", async function () {
             const { rewardPoolDistribution,deployer, cto, financeDept } = await loadFixture(deployContracts);
-
+            // can not call not exist function getTestNumber
+            // expect(typeof rewardPoolDistribution.getTestNumber).not.not.equal("function");
+            expect(typeof rewardPoolDistribution.getTestNumber).to.equal("undefined");
             // Prepare a new implementation contract
-            const RewardPoolDistributionV2 = await ethers.getContractFactory("RewardPoolDistribution");
+            const RewardPoolDistributionV2 = await ethers.getContractFactory("RewardPoolUpgradeTest");
             const newImplementation = await RewardPoolDistributionV2.deploy();
             await newImplementation.waitForDeployment();
+            console.log("proxy address: ", rewardPoolDistribution.target);
+            console.log("new implementation address: ", newImplementation.target);
 
             // Propose and approve the upgrade
             await rewardPoolDistribution.connect(deployer).proposeUpgrade(newImplementation.target);
             await rewardPoolDistribution.connect(cto).approveUpgrade();
             await rewardPoolDistribution.connect(financeDept).approveUpgrade();
 
-            // Fast-forward time to after activation time
-            const pendingUpgrade = await rewardPoolDistribution.pendingUpgrade();
-            const activationTime = pendingUpgrade.activationTime;
-            console.log("activation time: ", activationTime);
+
+            // const pendingUpgrade = await rewardPoolDistribution.pendingUpgrade();
+            // const activationTime = pendingUpgrade.activationTime;
+            // console.log("activation time: ", activationTime);
 
             // pass 3 days
             await mine(60 * 60 * 24 * 3);
@@ -158,10 +162,20 @@ describe("Reward Pool Contract Upgrade Logic", function () {
                 .to.emit(rewardPoolDistribution, "Upgraded")
                 .withArgs(newImplementation.target);
 
+            // Get upgraded contract instance
+            const upgradedContract = RewardPoolDistributionV2.attach(rewardPoolDistribution.target);
+
             // Verify the version has incremented
-            const version = await rewardPoolDistribution.getVersion();
+            const version = await upgradedContract.getVersion();
             expect(version).to.equal(2);
+            // can call new function getTestNumber
+            const testNumber = await upgradedContract.getTestNumber();
+            // console.log("test number: ", testNumber);
+            expect(testNumber).to.equal(1234);
+            expect(rewardPoolDistribution.target).to.equal(upgradedContract.target);
+            // console.log("proxy address: ", upgradedContract.target);
         });
+
 
         it("Should not execute the upgrade without sufficient approvals", async function () {
             const { rewardPoolDistribution, deployer, cto } = await loadFixture(deployContracts);
@@ -208,7 +222,7 @@ describe("Reward Pool Contract Upgrade Logic", function () {
         });
 
         it("Should not allow cancellation after activation time", async function () {
-            const { rewardPoolDistribution, cto, deployer } = await loadFixture(deployContracts);
+            const { rewardPoolDistribution, cto, deployer, financeDept, chairman, manager, signer, verifier, deliver } = await loadFixture(deployContracts);
 
             // Prepare a new implementation contract
             const RewardPoolDistributionV2 = await ethers.getContractFactory("RewardPoolDistribution");
@@ -233,7 +247,7 @@ describe("Reward Pool Contract Upgrade Logic", function () {
             const { rewardPoolDistribution, deployer, cto, financeDept } = await loadFixture(deployContracts);
 
             // Prepare a new implementation contract
-            const RewardPoolDistributionV2 = await ethers.getContractFactory("RewardPoolDistribution");
+            const RewardPoolDistributionV2 = await ethers.getContractFactory("RewardPoolUpgradeTest");
             const newImplementation = await RewardPoolDistributionV2.deploy();
             await newImplementation.waitForDeployment();
 
@@ -254,5 +268,22 @@ describe("Reward Pool Contract Upgrade Logic", function () {
                 "UpgradeNotScheduled"
             );
         });
+
+        it("Should not allow upgrade in normal way", async function () {
+            const { rewardPoolDistribution, deployer, manager, signer, verifier, deliver, cto, financeDept, chairman } = await loadFixture(deployContracts);
+            // can not call not exist function getTestNumber
+            expect(typeof rewardPoolDistribution.getTestNumber).not.not.equal("function");
+            // Prepare a new implementation contract factory
+            const RewardPoolDistributionV2 = await ethers.getContractFactory("RewardPoolUpgradeTest");
+            console.log("Deploying RewardPoolDistribution as a proxy...");
+            // Attempt to upgrade the contract using the proxy address
+            await expect(
+                upgrades.upgradeProxy(
+                    rewardPoolDistribution.target,
+                    RewardPoolDistributionV2
+                )
+            ).to.be.revertedWithCustomError(rewardPoolDistribution, "UpgradeNotAuthorized");
+        });
+
     });
 });
